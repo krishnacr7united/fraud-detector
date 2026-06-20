@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SecureBank - Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #0f1117; color: white; }
+        .navbar {
+            background: #1a1d2e;
+            padding: 16px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #2d2f45;
+        }
+        .navbar h1 { font-size: 20px; color: #667eea; }
+        .nav-links { display: flex; gap: 24px; align-items: center; }
+        .nav-links a {
+            color: #8b8fa8;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+        .nav-links a:hover { color: white; }
+        .nav-links a.active { color: white; font-weight: 600; }
+        .logout {
+            background: rgba(255,75,75,0.15);
+            color: #ff4b4b !important;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 13px !important;
+        }
+        .main { padding: 40px; max-width: 1100px; margin: 0 auto; }
+        .welcome { margin-bottom: 32px; }
+        .welcome h2 { font-size: 26px; margin-bottom: 4px; }
+        .welcome p { color: #8b8fa8; font-size: 14px; }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+        .stat-card {
+            background: #1a1d2e;
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid #2d2f45;
+        }
+        .stat-card .label { font-size: 13px; color: #8b8fa8; margin-bottom: 8px; }
+        .stat-card .value { font-size: 28px; font-weight: 700; }
+        .stat-card.fraud .value { color: #ff4b4b; }
+        .stat-card.legit .value { color: #00c864; }
+        .stat-card.balance .value { color: #667eea; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        .box {
+            background: #1a1d2e;
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid #2d2f45;
+        }
+        .box h3 { font-size: 16px; margin-bottom: 20px; }
+        .cc {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+        .cc .bank { font-size: 12px; opacity: 0.8; margin-bottom: 16px; }
+        .cc .number { font-size: 18px; letter-spacing: 4px; margin-bottom: 16px; }
+        .cc .row { display: flex; justify-content: space-between; font-size: 12px; opacity: 0.8; }
+        .action-btn {
+            display: block;
+            width: 100%;
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            transition: opacity 0.2s;
+        }
+        .action-btn:hover { opacity: 0.85; }
+        .btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+        .btn-secondary { background: #0f1117; color: #8b8fa8; border: 1px solid #2d2f45; }
+        .tx-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #2d2f45;
+            font-size: 14px;
+        }
+        .tx-row:last-child { border-bottom: none; }
+        .tx-left { display: flex; flex-direction: column; gap: 4px; }
+        .tx-merchant { font-weight: 500; }
+        .tx-time { font-size: 12px; color: #8b8fa8; }
+        .badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge.fraud { background: rgba(255,75,75,0.15); color: #ff4b4b; }
+        .badge.legit { background: rgba(0,200,100,0.15); color: #00c864; }
+        .empty { color: #8b8fa8; font-size: 14px; text-align: center; padding: 20px 0; }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <h1>💳 SecureBank</h1>
+        <div class="nav-links">
+            <a href="/dashboard" class="active">Dashboard</a>
+            <a href="/check">Check Transaction</a>
+            <a href="/history">History</a>
+            <a href="/logout" class="logout">Logout</a>
+        </div>
+    </div>
+
+    <div class="main">
+        <div class="welcome">
+            <h2>Welcome back, {{ user.name }} 👋</h2>
+            <p>Here's your account overview and fraud detection summary.</p>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card balance">
+                <div class="label">💰 Account Balance</div>
+                <div class="value">${{ "%.2f"|format(user.balance) }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">📋 Total Checked</div>
+                <div class="value">{{ total }}</div>
+            </div>
+            <div class="stat-card legit">
+                <div class="label">✅ Legitimate</div>
+                <div class="value">{{ legit_count }}</div>
+            </div>
+            <div class="stat-card fraud">
+                <div class="label">🚨 Fraudulent</div>
+                <div class="value">{{ fraud_count }}</div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="box">
+                <h3>My Card</h3>
+                <div class="cc">
+                    <div class="bank">SecureBank</div>
+                    <div class="number">{{ user.card }}</div>
+                    <div class="row">
+                        <span>CARD HOLDER<br><strong>{{ user.name }}</strong></span>
+                        <span>EXPIRES<br><strong>12/27</strong></span>
+                    </div>
+                </div>
+                <a href="/check" class="action-btn btn-primary">🔍 Check Transaction</a>
+                <a href="/history" class="action-btn btn-secondary">📋 View Full History</a>
+            </div>
+
+            <div class="box">
+                <h3>Recent Transactions</h3>
+                {% if history %}
+                    {% for tx in history %}
+                    <div class="tx-row">
+                        <div class="tx-left">
+                            <span class="tx-merchant">{{ tx.merchant }}</span>
+                            <span class="tx-time">{{ tx.timestamp }} &nbsp;|&nbsp; ${{ tx.amount }}</span>
+                        </div>
+                        <span class="badge {{ 'fraud' if tx.prediction == 1 else 'legit' }}">
+                            {{ '🚨 Fraud' if tx.prediction == 1 else '✅ Legit' }}
+                        </span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty">No transactions checked yet.<br>
+                    <a href="/check" style="color:#667eea;">Check your first transaction →</a></div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>

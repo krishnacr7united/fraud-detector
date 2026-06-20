@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SecureBank - Check Transaction</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #0f1117; color: white; }
+        .navbar {
+            background: #1a1d2e;
+            padding: 16px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #2d2f45;
+        }
+        .navbar h1 { font-size: 20px; color: #667eea; }
+        .nav-links { display: flex; gap: 24px; align-items: center; }
+        .nav-links a { color: #8b8fa8; text-decoration: none; font-size: 14px; }
+        .nav-links a:hover { color: white; }
+        .nav-links a.active { color: white; font-weight: 600; }
+        .logout { background: rgba(255,75,75,0.15); color: #ff4b4b !important; padding: 6px 14px; border-radius: 6px; font-size: 13px !important; }
+        .main { padding: 40px; max-width: 800px; margin: 0 auto; }
+        h2 { font-size: 24px; margin-bottom: 6px; }
+        .sub { color: #8b8fa8; font-size: 14px; margin-bottom: 32px; }
+        .box { background: #1a1d2e; border-radius: 12px; padding: 32px; border: 1px solid #2d2f45; margin-bottom: 24px; }
+        .box h3 { font-size: 16px; margin-bottom: 24px; }
+        .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 20px; }
+        label { font-size: 13px; color: #8b8fa8; }
+        input, select {
+            background: #0f1117;
+            border: 1px solid #2d2f45;
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: white;
+            font-size: 15px;
+            width: 100%;
+        }
+        input:focus, select:focus { outline: none; border-color: #667eea; }
+        select option { background: #1a1d2e; }
+        button {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 8px;
+            padding: 14px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+        button:hover { opacity: 0.9; }
+
+        .result-fraud {
+            background: rgba(255,75,75,0.1);
+            border: 1px solid #ff4b4b;
+            border-radius: 12px;
+            padding: 28px;
+            animation: fadeIn 0.5s ease;
+        }
+        .result-legit {
+            background: rgba(0,200,100,0.1);
+            border: 1px solid #00c864;
+            border-radius: 12px;
+            padding: 28px;
+            animation: fadeIn 0.5s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .result-header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+        .result-icon { font-size: 48px; }
+        .result-title { font-size: 22px; font-weight: 700; }
+        .result-sub { font-size: 13px; color: #8b8fa8; margin-top: 4px; }
+
+        .risk-bar-container { margin-bottom: 24px; }
+        .risk-label { display: flex; justify-content: space-between; font-size: 13px; color: #8b8fa8; margin-bottom: 8px; }
+        .risk-bar { background: #2d2f45; border-radius: 20px; height: 10px; overflow: hidden; }
+        .risk-fill { height: 100%; border-radius: 20px; transition: width 1s ease; }
+        .risk-fill.high { background: linear-gradient(90deg, #ff8c00, #ff4b4b); }
+        .risk-fill.low { background: linear-gradient(90deg, #00c864, #00a854); }
+
+        .reasons { margin-bottom: 24px; }
+        .reasons h4 { font-size: 14px; color: #8b8fa8; margin-bottom: 12px; }
+        .reason-item { display: flex; align-items: center; gap: 10px; font-size: 14px; padding: 8px 0; border-bottom: 1px solid #2d2f45; }
+        .reason-item:last-child { border-bottom: none; }
+        .reason-icon { font-size: 16px; }
+
+        .tx-details { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .tx-detail { background: #0f1117; border-radius: 8px; padding: 12px; text-align: center; }
+        .tx-detail .dl { font-size: 11px; color: #8b8fa8; margin-bottom: 4px; }
+        .tx-detail .dv { font-size: 16px; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <h1>💳 SecureBank</h1>
+        <div class="nav-links">
+            <a href="/dashboard">Dashboard</a>
+            <a href="/check" class="active">Check Transaction</a>
+            <a href="/history">History</a>
+            <a href="/logout" class="logout">Logout</a>
+        </div>
+    </div>
+
+    <div class="main">
+        <h2>Check Transaction</h2>
+        <p class="sub">Enter transaction details to instantly check for fraud.</p>
+
+        <div class="box">
+            <h3>Transaction Details</h3>
+            <form method="POST">
+                <div class="grid2">
+                    <div class="field">
+                        <label>Transaction Amount ($)</label>
+                        <input type="number" name="amount" placeholder="e.g. 149.62" step="0.01" min="0" required value="{{ result.amount if result else '' }}">
+                    </div>
+                    <div class="field">
+                        <label>Merchant</label>
+                        <select name="merchant">
+                            {% for m in merchants %}
+                            <option value="{{ m }}" {{ 'selected' if result and result.merchant == m else '' }}>{{ m }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="field">
+                    <label>Transaction Time (seconds since first transaction)</label>
+                    <input type="number" name="time" placeholder="e.g. 3600" min="0" required value="{{ result.time if result else '' }}">
+                </div>
+                <button type="submit">🔍 Analyze Transaction</button>
+            </form>
+        </div>
+
+        {% if result %}
+        <div class="{{ 'result-fraud' if result.prediction == 1 else 'result-legit' }}">
+            <div class="result-header">
+                <div class="result-icon">{{ '🚨' if result.prediction == 1 else '✅' }}</div>
+                <div>
+                    <div class="result-title">{{ 'Fraudulent Transaction Detected!' if result.prediction == 1 else 'Transaction Approved' }}</div>
+                    <div class="result-sub">{{ 'Please contact your bank immediately and block your card.' if result.prediction == 1 else 'This transaction appears safe and legitimate.' }}</div>
+                </div>
+            </div>
+
+            <div class="risk-bar-container">
+                <div class="risk-label">
+                    <span>Risk Score</span>
+                    <span>{{ result.risk_score }}%</span>
+                </div>
+                <div class="risk-bar">
+                    <div class="risk-fill {{ 'high' if result.prediction == 1 else 'low' }}" style="width: {{ result.risk_score }}%"></div>
+                </div>
+            </div>
+
+            <div class="reasons">
+                <h4>{{ '⚠️ Reasons flagged:' if result.prediction == 1 else '✔️ Why this looks safe:' }}</h4>
+                {% for reason in result.reasons %}
+                <div class="reason-item">
+                    <span class="reason-icon">{{ '🔴' if result.prediction == 1 else '🟢' }}</span>
+                    {{ reason }}
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="tx-details">
+                <div class="tx-detail">
+                    <div class="dl">Amount</div>
+                    <div class="dv">${{ result.amount }}</div>
+                </div>
+                <div class="tx-detail">
+                    <div class="dl">Merchant</div>
+                    <div class="dv">{{ result.merchant }}</div>
+                </div>
+                <div class="tx-detail">
+                    <div class="dl">Confidence</div>
+                    <div class="dv">{{ result.confidence }}%</div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

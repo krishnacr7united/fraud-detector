@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Fraud Detector</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #0f1117;
+            color: white;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        .card {
+            background: #1a1d2e;
+            border-radius: 16px;
+            padding: 40px;
+            width: 100%;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+        h1 { text-align: center; margin-bottom: 8px; }
+        p.sub { text-align: center; color: #8b8fa8; font-size: 14px; margin-bottom: 24px; }
+        .cc {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+        .cc .bank { font-size: 12px; opacity: 0.8; margin-bottom: 12px; }
+        .cc .number { font-size: 18px; letter-spacing: 4px; margin-bottom: 12px; }
+        .cc .row { display: flex; justify-content: space-between; font-size: 12px; opacity: 0.8; }
+        label { display: block; font-size: 13px; color: #8b8fa8; margin-bottom: 6px; }
+        input {
+            width: 100%;
+            background: #0f1117;
+            border: 1px solid #2d2f45;
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: white;
+            font-size: 15px;
+            margin-bottom: 20px;
+        }
+        input:focus { outline: none; border-color: #667eea; }
+        button {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 8px;
+            padding: 14px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        button:hover { opacity: 0.9; }
+        .result {
+            margin-top: 24px;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+        .fraud { background: rgba(255,75,75,0.15); border: 1px solid #ff4b4b; }
+        .legit { background: rgba(0,200,100,0.15); border: 1px solid #00c864; }
+        .icon { font-size: 40px; margin-bottom: 8px; }
+        .status { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+        .message { font-size: 13px; color: #8b8fa8; margin-bottom: 12px; }
+        .confidence {
+            display: inline-block;
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 4px 16px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>💳 Fraud Detection</h1>
+        <p class="sub">Enter your transaction details to check for fraud</p>
+
+        <div class="cc">
+            <div class="bank">SecureBank</div>
+            <div class="number">**** **** **** 4291</div>
+            <div class="row">
+                <span>CARD HOLDER<br><strong>K SKIN</strong></span>
+                <span>EXPIRES<br><strong>12/27</strong></span>
+            </div>
+        </div>
+
+        <form method="POST" action="/predict">
+            <label>Transaction Amount ($)</label>
+            <input type="number" name="amount" placeholder="e.g. 149.62" step="0.01" min="0" required value="{{ result.amount if result else '' }}">
+
+            <label>Transaction Time (seconds since first transaction)</label>
+            <input type="number" name="time" placeholder="e.g. 3600" min="0" required value="{{ result.time if result else '' }}">
+
+            <button type="submit">🔍 Check Transaction</button>
+        </form>
+
+        {% if result %}
+        <div class="result {{ 'fraud' if result.prediction == 1 else 'legit' }}">
+            <div class="icon">{{ '🚨' if result.prediction == 1 else '✅' }}</div>
+            <div class="status">{{ 'Fraudulent Transaction!' if result.prediction == 1 else 'Legitimate Transaction' }}</div>
+            <div class="message">
+                {% if result.prediction == 1 %}
+                This transaction has been flagged as suspicious. Please contact your bank immediately.
+                {% else %}
+                This transaction appears safe and has been approved.
+                {% endif %}
+            </div>
+            <div class="confidence">Confidence: {{ result.confidence }}%</div>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

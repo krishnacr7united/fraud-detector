@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SecureBank - Login</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #0f1117;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            display: flex;
+            width: 900px;
+            height: 550px;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+        .left {
+            flex: 1;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            padding: 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .left h2 { font-size: 32px; margin-bottom: 12px; }
+        .left p { opacity: 0.85; font-size: 15px; line-height: 1.6; margin-bottom: 32px; }
+        .feature { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; font-size: 14px; }
+        .feature span { font-size: 20px; }
+        .right {
+            flex: 1;
+            background: #1a1d2e;
+            padding: 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .right h1 { font-size: 26px; margin-bottom: 6px; }
+        .right p { color: #8b8fa8; font-size: 14px; margin-bottom: 32px; }
+        label { font-size: 13px; color: #8b8fa8; display: block; margin-bottom: 6px; }
+        input {
+            width: 100%;
+            background: #0f1117;
+            border: 1px solid #2d2f45;
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: white;
+            font-size: 15px;
+            margin-bottom: 20px;
+        }
+        input:focus { outline: none; border-color: #667eea; }
+        button {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 8px;
+            padding: 14px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        button:hover { opacity: 0.9; }
+        .error {
+            background: rgba(255,75,75,0.15);
+            border: 1px solid #ff4b4b;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 13px;
+            color: #ff4b4b;
+            margin-bottom: 16px;
+        }
+        .hint {
+            margin-top: 16px;
+            text-align: center;
+            font-size: 12px;
+            color: #8b8fa8;
+            background: #0f1117;
+            border-radius: 8px;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="left">
+            <h2>💳 SecureBank</h2>
+            <p>AI-powered fraud detection keeping your money safe 24/7.</p>
+            <div class="feature"><span>🛡️</span> Real-time fraud detection</div>
+            <div class="feature"><span>📊</span> Transaction analytics</div>
+            <div class="feature"><span>🔔</span> Instant fraud alerts</div>
+            <div class="feature"><span>🔒</span> Secure & encrypted</div>
+        </div>
+        <div class="right">
+            <h1>Welcome back</h1>
+            <p>Sign in to your SecureBank account</p>
+            {% if error %}
+            <div class="error">⚠️ {{ error }}</div>
+            {% endif %}
+            <form method="POST">
+                <label>Username</label>
+                <input type="text" name="username" placeholder="Enter your username" required>
+                <label>Password</label>
+                <input type="password" name="password" placeholder="Enter your password" required>
+                <button type="submit">Sign In →</button>
+            </form>
+            
+        </div>
+    </div>
+</body>
+</html>

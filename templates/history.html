@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SecureBank - Transaction History</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #0f1117; color: white; }
+        .navbar {
+            background: #1a1d2e;
+            padding: 16px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #2d2f45;
+        }
+        .navbar h1 { font-size: 20px; color: #667eea; }
+        .nav-links { display: flex; gap: 24px; align-items: center; }
+        .nav-links a { color: #8b8fa8; text-decoration: none; font-size: 14px; }
+        .nav-links a:hover { color: white; }
+        .nav-links a.active { color: white; font-weight: 600; }
+        .logout { background: rgba(255,75,75,0.15); color: #ff4b4b !important; padding: 6px 14px; border-radius: 6px; font-size: 13px !important; }
+        .main { padding: 40px; max-width: 1000px; margin: 0 auto; }
+        .top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
+        .top h2 { font-size: 24px; }
+        .top p { color: #8b8fa8; font-size: 14px; margin-top: 4px; }
+        .check-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; }
+        .stat {
+            background: #1a1d2e;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #2d2f45;
+            text-align: center;
+        }
+        .stat .label { font-size: 13px; color: #8b8fa8; margin-bottom: 8px; }
+        .stat .value { font-size: 28px; font-weight: 700; }
+        .stat.fraud .value { color: #ff4b4b; }
+        .stat.legit .value { color: #00c864; }
+
+        table { width: 100%; border-collapse: collapse; background: #1a1d2e; border-radius: 12px; overflow: hidden; border: 1px solid #2d2f45; }
+        thead { background: #2d2f45; }
+        th { padding: 14px 20px; text-align: left; font-size: 13px; color: #8b8fa8; font-weight: 500; }
+        td { padding: 14px 20px; font-size: 14px; border-bottom: 1px solid #2d2f45; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: rgba(102,126,234,0.05); }
+
+        .badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+        .badge.fraud { background: rgba(255,75,75,0.15); color: #ff4b4b; }
+        .badge.legit { background: rgba(0,200,100,0.15); color: #00c864; }
+
+        .risk-mini { display: flex; align-items: center; gap: 8px; }
+        .risk-mini-bar { flex: 1; background: #2d2f45; border-radius: 10px; height: 6px; overflow: hidden; max-width: 80px; }
+        .risk-mini-fill { height: 100%; border-radius: 10px; }
+        .risk-mini-fill.high { background: #ff4b4b; }
+        .risk-mini-fill.low { background: #00c864; }
+        .risk-mini span { font-size: 12px; color: #8b8fa8; min-width: 36px; }
+
+        .empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: #8b8fa8;
+        }
+        .empty p { margin-bottom: 16px; font-size: 15px; }
+        .empty a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <h1>💳 SecureBank</h1>
+        <div class="nav-links">
+            <a href="/dashboard">Dashboard</a>
+            <a href="/check">Check Transaction</a>
+            <a href="/history" class="active">History</a>
+            <a href="/logout" class="logout">Logout</a>
+        </div>
+    </div>
+
+    <div class="main">
+        <div class="top">
+            <div>
+                <h2>Transaction History</h2>
+                <p>All transactions you have checked for fraud.</p>
+            </div>
+            <a href="/check" class="check-btn">+ Check New Transaction</a>
+        </div>
+
+        {% if history %}
+        <div class="stats">
+            <div class="stat">
+                <div class="label">📋 Total Checked</div>
+                <div class="value">{{ history|length }}</div>
+            </div>
+            <div class="stat legit">
+                <div class="label">✅ Legitimate</div>
+                <div class="value">{{ history|selectattr('prediction', 'equalto', 0)|list|length }}</div>
+            </div>
+            <div class="stat fraud">
+                <div class="label">🚨 Fraudulent</div>
+                <div class="value">{{ history|selectattr('prediction', 'equalto', 1)|list|length }}</div>
+            </div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Merchant</th>
+                    <th>Amount</th>
+                    <th>Time</th>
+                    <th>Risk Score</th>
+                    <th>Confidence</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tx in history %}
+                <tr>
+                    <td style="color:#8b8fa8;">{{ loop.index }}</td>
+                    <td>{{ tx.merchant }}</td>
+                    <td>${{ tx.amount }}</td>
+                    <td>{{ tx.time }}s</td>
+                    <td>
+                        <div class="risk-mini">
+                            <div class="risk-mini-bar">
+                                <div class="risk-mini-fill {{ 'high' if tx.prediction == 1 else 'low' }}" style="width:{{ tx.risk_score }}%"></div>
+                            </div>
+                            <span>{{ tx.risk_score }}%</span>
+                        </div>
+                    </td>
+                    <td>{{ tx.confidence }}%</td>
+                    <td>
+                        <span class="badge {{ 'fraud' if tx.prediction == 1 else 'legit' }}">
+                            {{ '🚨 Fraud' if tx.prediction == 1 else '✅ Legit' }}
+                        </span>
+                    </td>
+                    <td style="color:#8b8fa8; font-size:12px;">{{ tx.timestamp }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% else %}
+        <div class="empty">
+            <p>No transactions checked yet.</p>
+            <a href="/check">Check your first transaction →</a>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
