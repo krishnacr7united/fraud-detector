@@ -42,6 +42,83 @@ def login():
             error = 'Invalid username or password'
     return render_template('login.html', error=error)
 
+@app.route('/payment', methods=['GET', 'POST'])
+def payment():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+    user = USERS[session['user']]
+    result = None
+    success = False
+    if request.method == 'POST':
+        amount = float(request.form['amount'])
+        recipient = request.form['recipient']
+        merchant = request.form['merchant']
+        time_val = float(request.form.get('time', 3600))
+
+        features = feature_means.copy()
+        features['Amount'] = amount
+        features['Time'] = time_val
+
+        input_array = np.array([features.values])
+        prediction = model.predict(input_array)[0]
+        probability = model.predict_proba(input_array)[0]
+        confidence = round(max(probability) * 100, 2)
+        risk_score = round(probability[1] * 100, 2)
+
+        if prediction == 1:
+            reasons = [
+                'Transaction amount is unusually high for this account',
+                'This merchant has been flagged in suspicious activity patterns',
+                'Transaction time does not match your usual activity hours',
+                'Rapid sequential transactions detected — possible card skimming',
+            ]
+        else:
+            reasons = ['Transaction amount is within normal range',
+                       'Merchant is verified and trusted',
+                       'Transaction time matches your usual activity',
+                       'No suspicious patterns detected']
+
+        if request.form.get('confirmed') == 'yes':
+            history = session.get('history', [])
+            history.insert(0, {
+                'merchant': merchant,
+                'amount': amount,
+                'time': time_val,
+                'prediction': int(prediction),
+                'confidence': confidence,
+                'risk_score': risk_score,
+                'timestamp': datetime.now().strftime('%d %b %Y, %I:%M %p'),
+                'reasons': reasons,
+                'recipient': recipient,
+                'status': 'Proceeded by user' if prediction == 1 else 'Completed'
+            })
+            session['history'] = history
+            session.modified = True
+            return render_template('payment.html', user=user,
+                                   success=True, amount=amount,
+                                   recipient=recipient, merchant=merchant,
+                                   was_fraud=int(prediction), result=None)
+
+        result = {
+            'prediction': int(prediction),
+            'confidence': confidence,
+            'risk_score': risk_score,
+            'amount': amount,
+            'recipient': recipient,
+            'merchant': merchant,
+            'time': time_val,
+            'reasons': reasons,
+            'timestamp': datetime.now().strftime('%d %b %Y, %I:%M %p'),
+        }
+
+        if prediction == 0:
+            history = session.get('history', [])
+            history.insert(0, {**result, 'status': 'Completed'})
+            session['history'] = history
+            session.modified = True
+
+    return render_template('payment.html', user=user, result=result, success=success)
+
 @app.route('/logout')
 def logout():
     session.clear()
